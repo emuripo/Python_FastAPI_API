@@ -1,232 +1,195 @@
-# Technical Challenge: Build an AI-Ready Document Processing API with FastAPI
-
-Design and implement a backend API using Python and FastAPI that simulates the core components of an AI-powered document processing system.
-
-The API should be structured in a clean, scalable, and production-minded way, following good backend engineering practices. The system must be designed to support future integration with services such as Azure OpenAI, Azure AI Search, and Azure Blob Storage.
-
-## What the solution should demonstrate
-
-- Clear API design
-- Request/response validation
-- Separation of concerns
-- Asynchronous processing where appropriate
-- Extensibility for chunking, embeddings, and retrieval workflows
-
-## Core capabilities
-
-The system should allow users to:
-
-- Upload or register documents
-- Process documents into chunks
-- Track processing status
-- Retrieve processed chunks
-- Perform a basic search over the processed content
-
-You do not need to fully integrate external AI services, but your design should leave clear extension points for:
-
-- Embedding generation
-- Vector search
-- Secret/configuration management
-- Background processing pipelines
-
-## Implementation focus
-
-Focus on writing code that is:
-
-- Easy to understand
-- Easy to extend
-- Realistic for a production AI backend
-
-## Functional Requirements
-
-### 1. Document Registration
-
-Create an endpoint to register a document with:
-
-- `title`
-- `raw text content`
-
-Each document should receive a unique ID and an initial status such as `uploaded`.
-
-### 2. Document Processing
-
-Create an endpoint to process a document.
-
-Processing should:
-
-- Split the document into chunks
-- Store the chunks
-- Update the processing status
-
-You can implement a simple chunking strategy based on word count, but the code should be easy to replace later with a more advanced chunking approach.
-
-### 3. Processing Status
-
-Allow users to retrieve the current status of a document:
-
-- `uploaded`
-- `processing`
-- `processed`
-- `failed`
-
-### 4. Chunk Retrieval
-
-Allow users to retrieve the generated chunks for a given document.
-
-### 5. Basic Search
-
-Create an endpoint that accepts a query and returns matching chunks from processed documents.
-
-This can be a simple keyword search for now, but the design should make it easy to replace with vector search later.
-
-### 6. Health Check
-
-Provide a simple health endpoint to confirm the API is running.
-
-## Non-Functional Requirements
-
-Your solution should also show:
-
-- Clean folder structure
-- Good naming
-- Modular code
-- Async-ready design
-- Error handling
-- Clear extension points for Azure integrations
-
-## Bonus points
-
-- Dependency injection
-- Config management
-- Background processing preparation
-- Comments explaining future Azure/OpenAI integration points
-
-## Expected Endpoints
-
-### Health
-
-- `GET /health`
-
-### Documents
-
-- `POST /documents`
-- `GET /documents/{document_id}`
-- `POST /documents/{document_id}/process`
-- `GET /documents/{document_id}/status`
-- `GET /documents/{document_id}/chunks`
-
-### Search
-
-- `POST /search`
-
-## Suggested Request and Response Examples
-
-### `POST /documents`
-
-Request:
-
-```json
-{
-  "title": "Azure RAG Notes",
-  "content": "Azure OpenAI can be used for embeddings and answer generation..."
-}
-```
-
-Response:
-
-```json
-{
-  "id": "123e4567",
-  "title": "Azure RAG Notes",
-  "status": "uploaded"
-}
-```
-
-### `POST /documents/{document_id}/process`
-
-Response:
-
-```json
-{
-  "document_id": "123e4567",
-  "status": "processed",
-  "chunks_created": 4
-}
-```
-
-### `GET /documents/{document_id}/status`
-
-Response:
-
-```json
-{
-  "document_id": "123e4567",
-  "status": "processed"
-}
-```
-
-### `GET /documents/{document_id}/chunks`
-
-Response:
-
-```json
-{
-  "document_id": "123e4567",
-  "chunks": [
-    "Azure OpenAI can be used...",
-    "Azure AI Search can store..."
-  ]
-}
-```
-
-### `POST /search`
-
-Request:
-
-```json
-{
-  "query": "Azure OpenAI"
-}
-```
-
-Response:
-
-```json
-{
-  "query": "Azure OpenAI",
-  "results": [
-    {
-      "document_id": "123e4567",
-      "chunk": "Azure OpenAI can be used..."
-    }
-  ]
-}
-```
-# Project Structure 
+# Interview-Style Prompt
+
+# "Build a simple REST API using Python and FastAPI to manage tasks. The API should allow:
+- creating a task,
+- listing tasks,
+- retrieving a task by id,
+- updating its status,
+- and deleting a task."
+
+# Project Structure
 app/
 ├── main.py
-├── api/
-│   └── routes/
-│       ├── documents.py
-│       └── search.py
+├── routes/
+│   └── tasks.py
 ├── schemas/
-│   ├── document.py
-│   └── search.py
+│   └── task.py
 ├── services/
-│   ├── document_service.py
-│   ├── chunking_service.py
-│   └── search_service.py
-├── integrations/
-│   ├── azure_openai_client.py
-│   └── azure_search_client.py
-├── db/
-│   └── fake_db.py
-└── core/
-    └── config.py
+│   └── task_service.py
+└── db/
+    └── fake_db.py
 
+# Why this structure
 
-routes	---> request
-schemas ---> validation
-services --->logic
-repositories ---> DB
-integrations ---> Azure / externals APIs 
+Because it gives you:
+
+- clear separation
+- speed
+- an easier structure to explain
+
+I would not add `repositories/` or `integrations/` here unless you have extra time.
+
+# Main entity
+
+The main entity is `Task`.
+
+Reasonable fields:
+- `id`
+- `title`
+- optional `description`
+- `completed`
+
+# Expected endpoints
+Minimum:
+GET /health
+POST /tasks
+GET /tasks
+GET /tasks/{task_id}
+PATCH /tasks/{task_id}
+DELETE /tasks/{task_id}
+
+# Phases to follow from start to finish
+
+# Phase 1 — understand the challenge
+Ask yourself these questions mentally:
+
+What is the entity? → `Task`
+What operations are required? → partial CRUD
+Do I need a real database? → no
+Do I need complex async behavior? → no, but FastAPI can still be async
+
+# Phase 2 — create the skeleton
+Create:
+- `main.py`
+- an empty router
+- the `/health` endpoint
+- Objective
+
+Get the API running first.
+
+Recommended commands if the project uses `.venv`:
+
+```powershell
+cd "C:\Users\esteb\Desktop\Code Challenges\Python_Apis\API_code_challenge_1"
+.\.venv\Scripts\Activate.ps1
+python -m pip install fastapi uvicorn pydantic
+python -m uvicorn app.main:app --reload
+```
+
+Recommended commands if the project does not use `.venv`:
+
+```powershell
+cd "C:\path\to\your\project"
+python -m pip install fastapi uvicorn pydantic
+python -m uvicorn app.main:app --reload
+```
+
+Safer version using the absolute Python path from `.venv`:
+
+```powershell
+cd "C:\Users\esteb\Desktop\Code Challenges\Python_Apis\API_code_challenge_1"
+& "C:\Users\esteb\Desktop\Code Challenges\Python_Apis\API_code_challenge_1\.venv\Scripts\python.exe" -m pip install fastapi uvicorn pydantic
+& "C:\Users\esteb\Desktop\Code Challenges\Python_Apis\API_code_challenge_1\.venv\Scripts\python.exe" -m uvicorn app.main:app --reload
+```
+
+# Phase 3 — define the contract
+Create schemas:
+
+- `TaskCreate`
+- `TaskResponse`
+- `TaskUpdate`
+
+Define clearly what comes in and what goes out.
+
+Useful command to verify `pydantic` is installed when using `.venv`:
+
+```powershell
+& "C:\Users\esteb\Desktop\Code Challenges\Python_Apis\API_code_challenge_1\.venv\Scripts\python.exe" -c "import pydantic; print(pydantic.__version__)"
+```
+
+Equivalent command without `.venv`:
+
+```powershell
+python -c "import pydantic; print(pydantic.__version__)"
+```
+
+# Phase 4 — simple storage
+Create `fake_db.py`:
+- `tasks_db = {}`
+
+# Phase 5 — business logic
+
+Create `TaskService` with functions:
+
+- `create_task`
+- `list_tasks`
+- `get_task`
+- `update_task`
+- `delete_task`
+- Objective
+
+Do not put business logic in the router.
+
+# Phase 6 — connect endpoints
+- Implement routes and error handling.
+
+# Phase 7 — validate the full flow
+Test:
+
+- create
+- list
+- get by id
+- update
+- delete
+- 404 case
+
+Useful commands for validation with the server running:
+
+```powershell
+Invoke-WebRequest -UseBasicParsing http://127.0.0.1:8000/health | Select-Object -ExpandProperty Content
+Invoke-WebRequest -UseBasicParsing http://127.0.0.1:8000/tasks | Select-Object -ExpandProperty Content
+```
+
+You can also validate interactively in Swagger at:
+
+```text
+http://127.0.0.1:8000/docs
+```
+
+# Phase 8 — final explanation
+Be ready to explain:
+
+- why that structure
+- how you would scale it
+- what you would change in production
+
+# Specific checklist for this challenge
+1. Setup
+[] create `main.py`
+[] create `tasks.py`
+[] start the app
+[] test `/health`
+[] know whether the project uses `.venv` or global Python
+
+2. Contract
+[] create `TaskCreate`
+[] create `TaskResponse`
+[] create `TaskUpdate`
+
+3. Data
+[] create `tasks_db = {}`
+
+4. Logic
+[] create
+[] list
+[] get by id
+[] update
+[] delete
+
+5. Validation
+[] return 404 if not found
+[] clear response format
+[] test the flow in Swagger
+
+# Your mental framework for this kind of challenge
+Entity → Schema → Storage → Service → Routes → Test
